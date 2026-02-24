@@ -353,7 +353,7 @@
             border-radius: 8px;
             background: var(--card-bg);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
+            z-index: 10000;
             display: flex;
             align-items: center;
             transform: translateX(150%);
@@ -381,6 +381,10 @@
             border-left: 4px solid var(--primary-color);
         }
         
+        .notification.warning {
+            border-left: 4px solid var(--warning-color);
+        }
+        
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.05); }
@@ -397,11 +401,12 @@
         }
         
         .coin-animation {
-            position: absolute;
+            position: fixed;
             font-size: 24px;
             color: gold;
-            z-index: 100;
+            z-index: 10001;
             animation: coinAnimation 1s forwards;
+            pointer-events: none;
         }
         
         /* নেভিগেশন বার স্টাইল */
@@ -564,15 +569,15 @@
         
         .popup-timer {
             margin-top: 15px;
-            font-size: 24px;
+            font-size: 32px;
             font-weight: bold;
             color: var(--primary-color);
         }
         
         .timer-bar {
-            height: 4px;
+            height: 6px;
             background: #f0f0f0;
-            border-radius: 2px;
+            border-radius: 3px;
             margin-top: 10px;
             overflow: hidden;
         }
@@ -588,6 +593,8 @@
             width: 100%;
             height: 300px;
             border: none;
+            border-radius: 8px;
+            background: #f5f5f5;
         }
         
         /* অটো মোড স্ট্যাটাস */
@@ -599,6 +606,9 @@
             font-size: 12px;
             font-weight: bold;
             margin-left: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
         
         .auto-status i {
@@ -608,6 +618,39 @@
         @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
+        }
+        
+        /* কাউন্টডাউন স্টাইল */
+        .countdown-timer {
+            background: rgba(255, 125, 74, 0.2);
+            margin: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--warning-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid var(--warning-color);
+        }
+        
+        .countdown-timer i {
+            font-size: 18px;
+        }
+        
+        .countdown-text {
+            font-weight: bold;
+        }
+        
+        /* লোডিং এনিমেশন */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
         }
         
         @media (max-width: 400px) {
@@ -676,7 +719,7 @@
             <div class="progress-container">
                 <div class="progress-header">
                     <h3>আজকের অগ্রগতি</h3>
-                    <span id="ads-progress">0/10</span>
+                    <span id="ads-progress">0/20</span>
                 </div>
                 <div class="progress-bar">
                     <div class="progress-fill" id="progress-fill"></div>
@@ -689,7 +732,13 @@
             
             <div class="ad-status" id="ad-status">
                 <i class="fas fa-check-circle"></i> বিজ্ঞাপন দেখতে প্রস্তুত
-                <span id="auto-mode-badge" style="display:none;" class="auto-status"><i class="fas fa-sync-alt"></i> অটো মোড চালু</span>
+                <span id="auto-mode-badge" style="display:none;" class="auto-status"><i class="fas fa-sync-alt fa-spin"></i> অটো মোড</span>
+            </div>
+            
+            <!-- কাউন্টডাউন টাইমার (শুধু অটো মোডে দেখাবে) -->
+            <div class="countdown-timer" id="countdownTimer" style="display: none;">
+                <i class="fas fa-hourglass-half fa-spin"></i>
+                <span id="countdownText">পরবর্তী বিজ্ঞাপনের জন্য অপেক্ষা করুন: ৩ সেকেন্ড</span>
             </div>
             
             <div class="action-buttons">
@@ -822,7 +871,7 @@
             <div class="notification-list">
                 <div class="stat-card">
                     <h3><i class="fas fa-info-circle"></i> নতুন আপডেট</h3>
-                    <p>স্বয়ংক্রিয় বিজ্ঞাপন সিস্টেম চালু হয়েছে। এখন থেকে স্বয়ংক্রিয়ভাবে বিজ্ঞাপন দেখে টাকা আয় করতে পারবেন। প্রতি ৫ সেকেন্ড পরপর বিজ্ঞাপন দেখাবে এবং ৫ সেকেন্ড পর বন্ধ হয়ে যাবে।</p>
+                    <p>স্বয়ংক্রিয় বিজ্ঞাপন সিস্টেম চালু হয়েছে। এখন থেকে স্বয়ংক্রিয়ভাবে বিজ্ঞাপন দেখে টাকা আয় করতে পারবেন। প্রতি ৭ সেকেন্ড পর বিজ্ঞাপন দেখাবে এবং ৩ সেকেন্ড পর পরবর্তী বিজ্ঞাপন লোড হবে।</p>
                     <small>আজ</small>
                 </div>
                 
@@ -882,10 +931,11 @@
                     frameborder="0"
                     allow="autoplay; fullscreen">
                 </iframe>
-                <div class="popup-timer" id="popupTimer">৫</div>
+                <div class="popup-timer" id="popupTimer">৭</div>
                 <div class="timer-bar">
                     <div class="timer-progress" id="timerProgress" style="width: 100%;"></div>
                 </div>
+                <p style="margin-top: 10px; font-size: 12px; color: #666;">বিজ্ঞাপন দেখার জন্য ধন্যবাদ! ৭ সেকেন্ড পর বন্ধ করতে পারবেন।</p>
             </div>
         </div>
     </div>
@@ -913,12 +963,13 @@
         let referralEarnings = 0.00;
         let userId = generateUserId();
         let isAutoMode = false;
-        let autoAdInterval;
         let isAdLoading = false;
-        let currentPopupWindow = null;
-        let popupTimer;
-        let popupTimeLeft = 5;
         let isPopupActive = false;
+        let popupTimerInterval;
+        let countdownTimerInterval;
+        let autoModeInterval;
+        let popupDuration = 7000; // 7 seconds
+        let nextAdDelay = 3000; // 3 seconds delay
 
         // Initialize the app
         function initApp() {
@@ -1040,9 +1091,10 @@
 
         // Update progress
         function updateProgress() {
-            const progressPercent = (earnedPoints / MIN_WITHDRAW_TAKA) * 100;
+            const totalEarnings = earnedPoints + referralEarnings;
+            const progressPercent = (totalEarnings / MIN_WITHDRAW_TAKA) * 100;
             document.getElementById('progress-fill').style.width = `${Math.min(progressPercent, 100)}%`;
-            document.getElementById('ads-progress').textContent = `${earnedPoints.toFixed(2)}/${MIN_WITHDRAW_TAKA} টাকা`;
+            document.getElementById('ads-progress').textContent = `${totalEarnings.toFixed(2)}/${MIN_WITHDRAW_TAKA} টাকা`;
         }
 
         // বিজ্ঞাপন পপআপ খোলার ফাংশন
@@ -1063,66 +1115,97 @@
             popup.classList.add('active');
             
             // টাইমার রিসেট
-            popupTimeLeft = 5;
-            timerDiv.textContent = popupTimeLeft;
+            let timeLeft = 7; // 7 seconds
+            timerDiv.textContent = timeLeft;
             timerProgress.style.width = '100%';
             closeBtn.disabled = true;
             
             // টাইমার কাউন্টডাউন শুরু
-            let timeLeft = 5;
-            const timer = setInterval(() => {
+            popupTimerInterval = setInterval(() => {
                 timeLeft--;
-                popupTimeLeft = timeLeft;
                 timerDiv.textContent = timeLeft;
                 
                 // প্রোগ্রেস বার আপডেট
-                const progressPercent = (timeLeft / 5) * 100;
+                const progressPercent = (timeLeft / 7) * 100;
                 timerProgress.style.width = `${progressPercent}%`;
                 
                 if (timeLeft <= 0) {
-                    clearInterval(timer);
+                    clearInterval(popupTimerInterval);
                     closeBtn.disabled = false;
-                    timerDiv.textContent = '✅';
+                    timerDiv.innerHTML = '<i class="fas fa-check-circle"></i>';
                     
                     // আয় যোগ করুন
-                    watchedAdsCount++;
-                    earnedPoints += POINTS_PER_AD;
-                    saveUserData();
-                    updateUI();
-                    createCoinAnimation();
+                    addEarnings();
                     
-                    showNotification(`০.২০ টাকা যোগ হয়েছে!`, 'success');
-                    
-                    // অটো মোডে থাকলে ৫ সেকেন্ড পর পরবর্তী বিজ্ঞাপন
+                    // অটো মোডে থাকলে স্বয়ংক্রিয়ভাবে বন্ধ হয়ে পরবর্তী বিজ্ঞাপনের জন্য অপেক্ষা
                     if (isAutoMode) {
                         setTimeout(() => {
                             closeAdPopup();
-                            setTimeout(() => {
-                                openAdPopup();
-                            }, 500);
-                        }, 2000);
+                        }, 1000);
                     }
                 }
             }, 1000);
+        }
+
+        // আয় যোগ করার ফাংশন
+        function addEarnings() {
+            watchedAdsCount++;
+            earnedPoints += POINTS_PER_AD;
+            saveUserData();
+            updateUI();
+            createCoinAnimation();
+            showNotification(`০.২০ টাকা যোগ হয়েছে! মোট: ${(earnedPoints + referralEarnings).toFixed(2)} টাকা`, 'success');
+        }
+
+        // পরবর্তী বিজ্ঞাপনের জন্য কাউন্টডাউন শুরু
+        function startCountdownForNextAd() {
+            const countdownDiv = document.getElementById('countdownTimer');
+            const countdownText = document.getElementById('countdownText');
             
-            // টাইমার সংরক্ষণ
-            popup.timer = timer;
+            countdownDiv.style.display = 'flex';
+            
+            let countdown = 3; // 3 seconds delay
+            
+            countdownTimerInterval = setInterval(() => {
+                countdown--;
+                countdownText.textContent = `পরবর্তী বিজ্ঞাপনের জন্য অপেক্ষা করুন: ${countdown} সেকেন্ড`;
+                
+                if (countdown <= 0) {
+                    clearInterval(countdownTimerInterval);
+                    countdownDiv.style.display = 'none';
+                    
+                    // পরবর্তী বিজ্ঞাপন খুলুন
+                    if (isAutoMode && !isPopupActive) {
+                        openAdPopup();
+                    }
+                }
+            }, 1000);
         }
 
         // বিজ্ঞাপন পপআপ বন্ধ করার ফাংশন
         function closeAdPopup() {
             const popup = document.getElementById('adPopup');
-            if (popup.timer) {
-                clearInterval(popup.timer);
+            if (popupTimerInterval) {
+                clearInterval(popupTimerInterval);
             }
             popup.classList.remove('active');
             isPopupActive = false;
+            
+            // If in auto mode, start countdown for next ad
+            if (isAutoMode) {
+                startCountdownForNextAd();
+            }
         }
 
         // বিজ্ঞাপন দেখার ফাংশন
         function watchAd() {
             if (isAutoMode) {
-                showNotification('অটো মোড চালু আছে। বন্ধ করুন এবং আবার চেষ্টা করুন।', 'info');
+                showNotification('অটো মোড চালু আছে। বন্ধ করুন এবং আবার চেষ্টা করুন।', 'warning');
+                return;
+            }
+            
+            if (isPopupActive) {
+                showNotification('ইতিমধ্যে একটি বিজ্ঞাপন চলছে।', 'info');
                 return;
             }
             
@@ -1144,12 +1227,12 @@
             document.getElementById('watch-ad-btn-earn').disabled = true;
             
             // অটো মোড ব্যাজ দেখান
-            document.getElementById('auto-mode-badge').style.display = 'inline-block';
+            document.getElementById('auto-mode-badge').style.display = 'inline-flex';
             document.getElementById('ad-status').innerHTML = '<i class="fas fa-robot"></i> স্বয়ংক্রিয় বিজ্ঞাপন মোড চালু <span class="auto-status"><i class="fas fa-sync-alt fa-spin"></i> অটো</span>';
             
-            showNotification('অটো মোড চালু হয়েছে। প্রতি ৫ সেকেন্ড পরপর বিজ্ঞাপন দেখাবে।', 'success');
+            showNotification('অটো মোড চালু হয়েছে। প্রতি ৭ সেকেন্ড পর বিজ্ঞাপন দেখাবে এবং ৩ সেকেন্ড পর পরবর্তী বিজ্ঞাপন লোড হবে।', 'success');
             
-            // প্রথম বিজ্ঞাপন খুলুন
+            // প্রথম বিজ্ঞাপন খুলুন (ছোট ডেলে)
             setTimeout(() => {
                 openAdPopup();
             }, 500);
@@ -1170,6 +1253,12 @@
             // অটো মোড ব্যাজ লুকান
             document.getElementById('auto-mode-badge').style.display = 'none';
             document.getElementById('ad-status').innerHTML = '<i class="fas fa-check-circle"></i> বিজ্ঞাপন দেখতে প্রস্তুত';
+            
+            // কাউন্টডাউন লুকান
+            document.getElementById('countdownTimer').style.display = 'none';
+            if (countdownTimerInterval) {
+                clearInterval(countdownTimerInterval);
+            }
             
             // বিজ্ঞাপন বন্ধ করুন
             closeAdPopup();
@@ -1295,16 +1384,20 @@
             const button = document.getElementById('watch-ad-btn');
             const rect = button.getBoundingClientRect();
             
-            const coin = document.createElement('div');
-            coin.className = 'coin-animation';
-            coin.innerHTML = '<i class="fas fa-coins"></i>';
-            coin.style.left = `${rect.left + rect.width/2}px`;
-            coin.style.top = `${rect.top}px`;
-            document.body.appendChild(coin);
-            
-            setTimeout(() => {
-                document.body.removeChild(coin);
-            }, 1000);
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const coin = document.createElement('div');
+                    coin.className = 'coin-animation';
+                    coin.innerHTML = '<i class="fas fa-coins"></i>';
+                    coin.style.left = `${rect.left + rect.width/2 + (Math.random() * 40 - 20)}px`;
+                    coin.style.top = `${rect.top}px`;
+                    document.body.appendChild(coin);
+                    
+                    setTimeout(() => {
+                        document.body.removeChild(coin);
+                    }, 1000);
+                }, i * 100);
+            }
         }
 
         // Show notification
